@@ -1,10 +1,12 @@
 import os
 import zipfile
-import tqdm
+from tqdm import tqdm
+import shutil
 
-# Makes the csv folder when it doesn't exist already. Folder is for the unpacked zips
-if not os.path.isdir("data/csv"):
-    os.mkdir("data/csv")
+# Make sure data folder is empty
+if os.path.isdir("data/csv"):
+    shutil.rmtree("data/csv")
+os.mkdir("data/csv")
 
 files = ["2024-02.zip",
          "2021-02.zip",
