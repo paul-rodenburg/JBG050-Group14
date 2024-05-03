@@ -29,10 +29,13 @@ def generate_database(areas: [str], replace_sql_database, generate_parquets=True
             print(f"Creating parquet for {column} ({count}/{len(columns)})")
             for file in files:
                 df_temp = pd.read_csv(file).astype(str)
-                df_temp = df_temp.rename(columns={col: col.replace(' ', '_') for col in df.columns})
+                df_temp = df_temp.rename(columns={col: col.replace(' ', '_') for col in df_temp.columns})
                 if "stop" in column:
-                    print(df_temp.columns)
-                    print(df_temp["Outcome_linked_to_object_of_search"].head())
+                    try:
+                        print(df_temp.columns)
+                        print(df_temp["Outcome_linked_to_object_of_search"].head())
+                    except:
+                        pass
                 df = pd.concat([df, df_temp])
             df.to_parquet(f"../data/parquets/{column}.parquet")
 
