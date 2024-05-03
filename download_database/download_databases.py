@@ -1,22 +1,31 @@
 import hashlib
 import os
+import sys
 import zipfile
 import gdown
 from tqdm import tqdm
 
 # Dictionary with the database available to download, key is name, value is the Google Drive id (used to download)
-databases = {"crime_data": "1pI6LmGOCYL589LRCPHhW73YgwqD6My7p"}
+databases = {"crime_data": "1i0OVndCQ8739vCXTrbJG_Gd1zJupVmk4"}
+
+# Check if user has newest version of database (using hashing), if not download the latest database from Google Drive.
 print("Checking your database version...")
-hash_file_id = ""
+hash_file_id = "1p1-qeApY27-FpY50u9V-r4au3whIt2G3"
 url = f'https://drive.google.com/uc?id={hash_file_id}'
 output = f'../data/hash_db.txt'
 gdown.download(url, output, quiet=False)
 f = open("../data/hash_db.txt", "r")
 newest_hash = f.read()
 f.close()
-current_hash = hashlib.md5(open(f'../data/hash_db.txt', 'rb').read()).hexdigest()
+current_hash = hashlib.md5(open(f'../data/crime_data.db', 'rb').read()).hexdigest()
+# Remove hash_db.txt (text file containing the hash value of the latest database file) because not needed to keep
+os.remove('../data/hash_db.txt')
 if current_hash != newest_hash:
-    print(f"There is a new version of the database found, newest version will be downloaded...\nYour hash: {current_hash}\n Newest hash: {newest_hash}")
+    print(f"There is a new version of the database found, newest version will be downloaded...\nYour hash: {current_hash}\nNewest hash: {newest_hash}")
+else:
+    print("You already have the latest database!")
+    sys.exit(0)
+
 
 # Download all database from Google Drive
 for database in databases.keys():
@@ -44,3 +53,5 @@ for source in sources:
                 zf.extract(member, target_path)
             except zipfile.error as e:
                 pass
+# Remove database zip file to save space
+os.remove("../data/crime_data.zip")
