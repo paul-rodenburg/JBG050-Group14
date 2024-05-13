@@ -28,7 +28,7 @@ def generate_database(areas: [str], replace_sql_database, generate_parquets=True
             df = pd.DataFrame()
             print(f"Creating parquet for {column} ({count}/{len(columns)})")
             for file in files:
-                df_temp = pd.read_csv(file).astype(str)
+                df_temp = pd.read_csv(file)
                 df_temp = df_temp.rename(columns={col: col.replace(' ', '_') for col in df_temp.columns})
                 df = pd.concat([df, df_temp])
             df.to_parquet(f"../data/parquets/{column}.parquet")
@@ -42,10 +42,20 @@ def generate_database(areas: [str], replace_sql_database, generate_parquets=True
     count = 1
     count_rows = 0
     # Make for each parquet (police force) a table in the SQL database
+    columns_deleted = "Columns whose values are *ONLY* NULLs are deleted since they are useless. This file contains some info about those removed columns"
     for parquet in parquets:
         try:
             # Read parquet file into DataFrame
             df = pd.read_parquet(f"../data/parquets/{parquet}")
+            columns_before = df.columns
+            df = df.dropna(axis="columns", how='all')  # Remove columns that ONLY have NULL values
+            columns_after = df.columns
+            print(f"{len(columns_before) - len(columns_after)} NULL columns deleted from {parquet.replace('.parquet', '')}")
+            columns_removed = list(set(columns_before) - set(columns_after))
+            text_columns_deleted = f"{len(columns_removed)} columns deleted ({len(columns_before)} -> {len(columns_after)}) in {parquet.replace('.parquet', '')}: [{', '.join(columns_removed)}]"
+
+            # Set the columns deleted info text for the txt file
+            columns_deleted = f"{columns_deleted}\n\n{text_columns_deleted}"
             if df.empty:
                 raise ValueError("Empty dataframe")
         except Exception as e:
@@ -75,14 +85,17 @@ def generate_database(areas: [str], replace_sql_database, generate_parquets=True
         # Print summary statistics
         print(f"Table {table_name} has in total {count_rows:,} rows.")
 
+        # Make txt file containing the info about columns deleted
+        with open("../data/CRIME_columns_deleted_info.txt", "w") as f:
+            f.write(columns_deleted)
 
 def ask_to_reset():
     x = input("Would you like to regenerate the SQL database (r) or update the database (u)? Type 'u' or 'r'")
-    if x == "r":
+    if x.lower() == "r":
         generate_database(["metropolitan"], replace_sql_database=True)
-    elif x == "u":
+    elif x.lower() == "u":
         generate_database(["metropolitan"], replace_sql_database=False)
-    elif x == "q":
+    elif x.lower() == "q" or x.lower() == 'quit' or x.lower() == 'exit':
         sys.exit(0)
     else:
         print("Invalid input, Try again (q for quit)")

@@ -17,6 +17,7 @@ gdown.download(url, output, quiet=False)
 f = open("../data/hash_db.txt", "r")
 newest_hash = f.read()
 f.close()
+print("Now hashing your database (in order to get the version), this can take a while ... It will probably take not more than 60 seconds")
 current_hash = hashlib.md5(open(f'../data/crime_data.db', 'rb').read()).hexdigest()
 # Remove hash_db.txt (text file containing the hash value of the latest database file) because not needed to keep
 os.remove('../data/hash_db.txt')
