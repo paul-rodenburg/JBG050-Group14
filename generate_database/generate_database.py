@@ -33,7 +33,10 @@ def generate_database(areas: [str], replace_sql_database, generate_parquets=True
                 df = pd.concat([df, df_temp])
             df.to_parquet(f"../data/parquets/{column}.parquet")
 
-    print("Parquet created! Now creating the SQL database...")
+    text_creating = "updating"
+    if replace_sql_database:
+        text_creating = "regenerating"
+    print(f"Parquet created! Now {text_creating} the SQL database...")
     if replace_sql_database:  # Remove the database so entirely new database will be made
         os.remove("../data/crime_data.db")
     parquet_dir = "../data/parquets"
