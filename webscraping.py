@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime
 
-API_KEY = '87007567182b41abbec5e78702dea483'
-
 # All the URL of news articles.
 urls = ['https://www.bbc.com/news/uk-england-london-53198702']
 
