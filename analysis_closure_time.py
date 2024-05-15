@@ -4,25 +4,18 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import sqlite3
-import os
-
-REGENERATE_PARQUET = False
 
 external_stylesheets = ['style.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-if os.path.isfile("data/crimes_combined.parquet") and not REGENERATE_PARQUET:
-    df = pd.read_parquet('data/crimes_combined.parquet')
-else:
-    q = """SELECT o.Crime_ID Crime_ID, o.Month outcomes_month, s.Month street_month, s.Longitude, s.Latitude
-        FROM 'metropolitan-outcomes' o, 'metropolitan-street' s
-        WHERE o.Crime_ID == s.Crime_ID
-        LIMIT 10"""
-    conn = sqlite3.connect('data/crime_data.db')
-    df = pd.read_sql_query(q, conn)
-    df.to_parquet('data/crimes_combined.parquet')
 
-fig_map = px.scatter_mapbox(df, lat='Latitude', lon='Longitude', zoom=6,
-                                hover_data=["outcomes_month", "street_month"], hover_name="Crime_ID", opacity=0.7)
+q = """SELECT c.Crime_ID Crime_ID, closure_time_months, Longitude, Latitude
+    FROM closure_time c, 'metropolitan-street' s
+    WHERE c.Crime_ID == s.Crime_ID"""
+conn = sqlite3.connect('data/crime_data.db')
+df = pd.read_sql_query(q, conn)
+
+fig_map = px.scatter_mapbox(df, lat='Latitude', lon='Longitude', zoom=6, color="closure_time_months",
+                                hover_data=["outcomes_month", "street_month", "closure_time_months"], hover_name="Crime_ID", opacity=0.7, mapbox_style='open-street-map',)
 
 app.layout = html.Div([dcc.Graph(figure=fig_map, id='map')])
 
