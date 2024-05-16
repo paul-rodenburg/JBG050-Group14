@@ -27,12 +27,12 @@ def extract_links_from_html(file_path):
 
     return links_return
 
-files_os = os.listdir("data/bbc")
+files_os = os.listdir("data\zips\\bbc")
 # Filter only the .zip files
 html_files = [file for file in files_os if file.endswith('.html')]
 links = []
 for file in html_files:
-    path = f'data/bbc/{file}'
+    path = f'data\zips\\bbc{file}'
     links.extend(extract_links_from_html(path))
 
 errors = 0
