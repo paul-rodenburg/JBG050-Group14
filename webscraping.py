@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime
 import os
-
+import sqlite3
 
 def extract_links_from_html(file_path):
     # Read HTML content from file
@@ -27,12 +27,12 @@ def extract_links_from_html(file_path):
 
     return links_return
 
-files_os = os.listdir("data\zips\\bbc")
+files_os = os.listdir("data\\bbc")
 # Filter only the .zip files
 html_files = [file for file in files_os if file.endswith('.html')]
 links = []
 for file in html_files:
-    path = f'data\zips\\bbc{file}'
+    path = f'data\\bbc\\{file}'
     links.extend(extract_links_from_html(path))
 
 errors = 0
@@ -46,7 +46,6 @@ for url in links:
     try:
         soup = BeautifulSoup(requests.get(url).content, "html.parser")
         data = json.loads(soup.select_one("#__NEXT_DATA__").text)
-        #data1 = json.loads(soup.select_one("__next").text)
 
         # Extracting headline and text content
         page = next(
