@@ -3,6 +3,7 @@ import requests
 from tqdm import tqdm
 import os
 import hashlib
+from functions import download
 
 # Makes the data folder when it doesn't exist already. Folder is for the downloaded zips, csv's, and SQL database
 if not os.path.isdir("../data"):
@@ -11,20 +12,6 @@ if not os.path.isdir("../data"):
 if not os.path.isdir("../data/zips"):
     os.mkdir("../data/zips")
 
-# Function to download files from an URL with a progress bar
-def download(url: str, fname: str, chunk_size=1024):
-    resp = requests.get(url, stream=True)
-    total = int(resp.headers.get('content-length', 0))
-    with open(fname, 'wb') as file, tqdm(
-        desc=fname,
-        total=total,
-        unit='iB',
-        unit_scale=True,
-        unit_divisor=1024,
-    ) as bar:
-        for data in resp.iter_content(chunk_size=chunk_size):
-            size = file.write(data)
-            bar.update(size)
 
 # Dictionary of needed file names with the hash/checksum as value so it can be checked if you have the right file.
 files = {"2024-02.zip": "46057dde71e363cc0bf564030a932f83",
