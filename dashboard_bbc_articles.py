@@ -8,7 +8,7 @@ import json
 
 external_stylesheets = ['style.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
+NAME = "BBC articles visualized"
 q = """SELECT sentiment_text, sentiment_headline, boroughs
     FROM BBC_articles
     WHERE boroughs IS NOT NULL"""
@@ -99,55 +99,54 @@ def make_map(color):
 histo, len_bbc_articles, _ = generate_histo("sentiment_text", boroughs[0], 45)
 
 app.layout = html.Div(
-    [html.Span(id="leaderboard-title", children='Borough Sentiment Leaderboard'),
-
-     html.Span(className="top-title", children='Best 5 Boroughs', style={'color': 'green'}),
-     dash_table.DataTable(
-         id='best5-table',
-         columns=[{"name": i, "id": i} for i in best5_df.columns],
-         data=best5_df.to_dict('records'),
-         style_table={'width': '50%', 'margin': 'auto'},
-         style_header={
-             'backgroundColor': 'rgb(230, 230, 230)',
-             'fontWeight': 'bold'
-         },
-         style_cell={
-             'textAlign': 'left',
-             'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
-         }
-     ),
-
-     html.Span(className="top-title", children='Worst 5 Boroughs', style={'color': 'red'}),
-     dash_table.DataTable(
-         id='worst5-table',
-         columns=[{"name": i, "id": i} for i in worst5_df.columns],
-         data=worst5_df.to_dict('records'),
-         style_table={'width': '50%', 'margin': 'auto'},
-         style_header={
-             'backgroundColor': 'rgb(230, 230, 230)',
-             'fontWeight': 'bold'
-         },
-         style_cell={
-             'textAlign': 'left',
-             'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
-         }
-     ),
-     html.Br(),
-     html.Br(),
-     dcc.Dropdown(className='dropdown', id="borough-dropdown", value=boroughs[0], options=boroughs, clearable=False),
-     dcc.Dropdown(className='dropdown', id="sentiment-dropdown", value="sentiment_text",
-                  options=["sentiment_text", "sentiment_headline"], clearable=False),
-     dcc.Dropdown(className='dropdown', id="bins-dropdown", value=15, options=[i for i in range(1, 51)],
-                  clearable=False),
-     html.Span(id="title-histo",
-               children=f"Histogram about 'sentiment_text' of the BBC articles ({len_bbc_articles}) for borough '{boroughs[0]}' (15 bins)"),
-     dcc.Graph(figure=histo, id='histo'),
-     html.Span(children="Attribute to base color on:", style={'display': 'block', 'width': '100%', 'text-align': 'center'}),
-     dcc.Dropdown(className='dropdown', id='color-dropdown', options=color_options, clearable=False, value=color_options[0]),
-     html.Div(id='map-container', children=[
-         dcc.Graph(figure=make_map(color_options[0]), id='map-boroughs')
-     ]),
-     ])
+    [html.Span(id='title', children=NAME),
+        html.Div(id='left-column', children=[
+                html.Span(id="leaderboard-title", children='Borough Sentiment Leaderboard'),
+                html.Span(className="top-title", children='Best 5 Boroughs', style={'color': 'green'}),
+                dash_table.DataTable(
+                    id='best5-table',
+                    columns=[{"name": i, "id": i} for i in best5_df.columns],
+                    data=best5_df.to_dict('records'),
+                    style_table={'width': '100%', 'margin': 'auto'},
+                    style_header={
+                        'backgroundColor': 'rgb(230, 230, 230)',
+                        'fontWeight': 'bold'
+                    },
+                    style_cell={
+                        'textAlign': 'left',
+                        'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
+                    }
+                ),
+                html.Span(className="top-title", children='Worst 5 Boroughs', style={'color': 'red'}),
+                dash_table.DataTable(
+                    id='worst5-table',
+                    columns=[{"name": i, "id": i} for i in worst5_df.columns],
+                    data=worst5_df.to_dict('records'),
+                    style_table={'width': '100%', 'margin': 'auto'},
+                    style_header={
+                        'backgroundColor': 'rgb(230, 230, 230)',
+                        'fontWeight': 'bold'
+                    },
+                    style_cell={
+                        'textAlign': 'left',
+                        'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
+                    }
+                )
+            ]
+        ),
+        html.Div(id='right-column', children=[
+                dcc.Dropdown(className='dropdown', id="borough-dropdown", value=boroughs[0], options=[{'label': b, 'value': b} for b in boroughs], clearable=False),
+                dcc.Dropdown(className='dropdown', id="sentiment-dropdown", value="sentiment_text", options=[{'label': i, 'value': i} for i in ["sentiment_text", "sentiment_headline"]], clearable=False),
+                dcc.Dropdown(className='dropdown', id="bins-dropdown", value=15, options=[{'label': i, 'value': i} for i in range(1, 51)], clearable=False),
+                html.Span(id="title-histo", children=f"Histogram about 'sentiment_text' of the BBC articles ({len_bbc_articles}) for borough '{boroughs[0]}' (15 bins)"),
+                dcc.Graph(figure=histo, id='histo'),
+                html.Span(children="Attribute to base color on:", style={'display': 'block', 'width': '100%', 'text-align': 'center'}),
+                dcc.Dropdown(className='dropdown', id='color-dropdown', options=[{'label': i, 'value': i} for i in color_options], clearable=False, value=color_options[0]),
+                dcc.Graph(figure=make_map(color_options[0]), id='map-boroughs')
+            ]
+        )
+    ]
+)
 
 
 @app.callback([Output('histo', 'figure'),
@@ -161,7 +160,7 @@ def update_histo(borough, sentiment, bins):
     return histo_return, title_histo
 
 
-@app.callback([Output('map-boroughs', 'figure')],
+@app.callback(Output('map-boroughs', 'figure'),
               [Input('color-dropdown', 'value')])
 def update_map(color_attribute):
     map_boroughs_return = make_map(color_attribute)
@@ -169,5 +168,5 @@ def update_map(color_attribute):
     return map_boroughs_return
 
 
-app.title = "BBC articles | Group 14"
+app.title = f"{NAME} | Group 14"
 app.run_server(debug=True, dev_tools_ui=False)
