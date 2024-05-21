@@ -58,26 +58,33 @@ def get_mean_headline(borough):
     return round(mean_sentiment, 4)
 
 
+def get_number_of_articles(borough):
+    df_histo = df.copy()
+    df_histo = df_histo[df_histo['boroughs'].apply(lambda x: borough in x)]
+    number_of_articles = len(df_histo)
+    df_histo = None
+    return f'{number_of_articles} ({number_of_articles/len(df)*100:.2f}%)'
+
+
 # Convert the dictionary to DataFrames
 best5_df = pd.DataFrame(list(boroughs_sentiment['best5'].items()), columns=['Borough', 'Trust']).sort_values(
     by='Trust', ascending=False)
-best5_df['sentiment_text_mean'] = best5_df['Borough'].apply(get_mean_text)
-best5_df['sentiment_headline_mean'] = best5_df['Borough'].apply(get_mean_headline)
+best5_df['sentiment_text'] = best5_df['Borough'].apply(get_mean_text)
+best5_df['sentiment_headline'] = best5_df['Borough'].apply(get_mean_headline)
+best5_df['number_of_articles'] = best5_df['Borough'].apply(get_number_of_articles)
 
 worst5_df = pd.DataFrame(list(boroughs_sentiment['worst5'].items()), columns=['Borough', 'Trust']).sort_values(
     by='Trust')
-worst5_df['sentiment_text_mean'] = best5_df['Borough'].apply(get_mean_text)
-worst5_df['sentiment_headline_mean'] = best5_df['Borough'].apply(get_mean_headline)
+worst5_df['sentiment_text'] = worst5_df['Borough'].apply(get_mean_text)
+worst5_df['sentiment_headline_'] = worst5_df['Borough'].apply(get_mean_headline)
+worst5_df['number_of_articles'] = worst5_df['Borough'].apply(get_number_of_articles)
+
 
 # Create map
 
 # Load GeoJSON data
 with open('london_boroughs.geojson') as f:
     geojson_data = json.load(f)
-# df_map = pd.DataFrame({
-#     "Borough": boroughs,
-#     "Value": [1] * len(boroughs)  # You can use any value here; it's for coloring purposes
-# })
 
 df_map = pd.concat([best5_df, worst5_df], ignore_index=True)
 # Lowercase the "name" property of each feature
@@ -88,7 +95,8 @@ color_options = [i for i in best5_df.columns if i != "Borough"]
 
 
 def make_map(color):
-    map_boroughs = px.choropleth_mapbox(df_map, geojson=geojson_data, locations='Borough', featureidkey="properties.name",
+    map_boroughs = px.choropleth_mapbox(df_map, geojson=geojson_data, locations='Borough',
+                                        featureidkey="properties.name",
                                         color=color, color_continuous_scale="Viridis",
                                         mapbox_style="carto-positron",
                                         hover_data=color_options,
@@ -96,56 +104,70 @@ def make_map(color):
                                         opacity=0.5)
     return map_boroughs
 
+
 histo, len_bbc_articles, _ = generate_histo("sentiment_text", boroughs[0], 45)
 
 app.layout = html.Div(
     [html.Span(id='title', children=NAME),
-        html.Div(id='left-column', children=[
-                html.Span(id="leaderboard-title", children='Borough Sentiment Leaderboard'),
-                html.Span(className="top-title", children='Best 5 Boroughs', style={'color': 'green'}),
-                dash_table.DataTable(
-                    id='best5-table',
-                    columns=[{"name": i, "id": i} for i in best5_df.columns],
-                    data=best5_df.to_dict('records'),
-                    style_table={'width': '100%', 'margin': 'auto'},
-                    style_header={
-                        'backgroundColor': 'rgb(230, 230, 230)',
-                        'fontWeight': 'bold'
-                    },
-                    style_cell={
-                        'textAlign': 'left',
-                        'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
-                    }
-                ),
-                html.Span(className="top-title", children='Worst 5 Boroughs', style={'color': 'red'}),
-                dash_table.DataTable(
-                    id='worst5-table',
-                    columns=[{"name": i, "id": i} for i in worst5_df.columns],
-                    data=worst5_df.to_dict('records'),
-                    style_table={'width': '100%', 'margin': 'auto'},
-                    style_header={
-                        'backgroundColor': 'rgb(230, 230, 230)',
-                        'fontWeight': 'bold'
-                    },
-                    style_cell={
-                        'textAlign': 'left',
-                        'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
-                    }
-                )
-            ]
-        ),
-        html.Div(id='right-column', children=[
-                dcc.Dropdown(className='dropdown', id="borough-dropdown", value=boroughs[0], options=[{'label': b, 'value': b} for b in boroughs], clearable=False),
-                dcc.Dropdown(className='dropdown', id="sentiment-dropdown", value="sentiment_text", options=[{'label': i, 'value': i} for i in ["sentiment_text", "sentiment_headline"]], clearable=False),
-                dcc.Dropdown(className='dropdown', id="bins-dropdown", value=15, options=[{'label': i, 'value': i} for i in range(1, 51)], clearable=False),
-                html.Span(id="title-histo", children=f"Histogram about 'sentiment_text' of the BBC articles ({len_bbc_articles}) for borough '{boroughs[0]}' (15 bins)"),
-                dcc.Graph(figure=histo, id='histo'),
-                html.Span(children="Attribute to base color on:", style={'display': 'block', 'width': '100%', 'text-align': 'center'}),
-                dcc.Dropdown(className='dropdown', id='color-dropdown', options=[{'label': i, 'value': i} for i in color_options], clearable=False, value=color_options[0]),
-                dcc.Graph(figure=make_map(color_options[0]), id='map-boroughs')
-            ]
-        )
-    ]
+     html.Div(id='left-column', children=[
+         html.Span(id="leaderboard-title", children='Borough Sentiment Leaderboard'),
+         html.Span(className="top-title", children='Best 5 Boroughs', style={'color': 'green'}),
+         dash_table.DataTable(
+             id='best5-table',
+             columns=[{"name": i, "id": i} for i in best5_df.columns],
+             data=best5_df.to_dict('records'),
+             style_table={'width': '100%', 'margin': 'auto'},
+             style_header={
+                 'backgroundColor': 'rgb(230, 230, 230)',
+                 'fontWeight': 'bold'
+             },
+             style_cell={
+                 'textAlign': 'left',
+                 'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
+             }
+         ),
+         html.Span(className="top-title", children='Worst 5 Boroughs', style={'color': 'red'}),
+         dash_table.DataTable(
+             id='worst5-table',
+             columns=[{"name": i, "id": i} for i in worst5_df.columns],
+             data=worst5_df.to_dict('records'),
+             style_table={'width': '100%', 'margin': 'auto'},
+             style_header={
+                 'backgroundColor': 'rgb(230, 230, 230)',
+                 'fontWeight': 'bold'
+             },
+             style_cell={
+                 'textAlign': 'left',
+                 'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
+             }
+         ),
+         html.Span(className='info-table', children='Sentiment is the mean over all the articles of that specific '
+                                                    'borough'),
+         html.Span(className='info-table', children="Percentage in the 'number_of_articles' column is the percentage "
+                                                    'of the number of articles that that borough has compared to the '
+                                                    f'total number of articles ({len(df)})')
+     ]
+              ),
+     html.Div(id='right-column', children=[
+         dcc.Dropdown(className='dropdown', id="borough-dropdown", value=boroughs[0],
+                      options=[{'label': b, 'value': b} for b in boroughs], clearable=False),
+         dcc.Dropdown(className='dropdown', id="sentiment-dropdown", value="sentiment_text",
+                      options=[{'label': i, 'value': i} for i in ["sentiment_text", "sentiment_headline"]],
+                      clearable=False),
+         dcc.Dropdown(className='dropdown', id="bins-dropdown", value=15,
+                      options=[{'label': i, 'value': i} for i in range(1, 51)], clearable=False),
+         html.Span(id="title-histo",
+                   children=f"Histogram about 'sentiment_text' of the BBC articles ({len_bbc_articles}) for borough '{boroughs[0]}' (15 bins)"),
+         dcc.Graph(figure=histo, id='histo'),
+         html.Span(children="Attribute to base color on:",
+                   style={'display': 'block', 'width': '100%', 'text-align': 'center'}),
+         dcc.Dropdown(className='dropdown', id='color-dropdown',
+                      options=[{'label': i, 'value': i} for i in color_options], clearable=False,
+                      value=color_options[0]),
+         dcc.Graph(figure=make_map(color_options[0]), id='map-boroughs')
+     ]
+              )
+     ]
 )
 
 

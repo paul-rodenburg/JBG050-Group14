@@ -11,6 +11,8 @@ body {
     display: inline-block;
     vertical-align: top;
     margin-top: 75px;
+    overflow: scroll;
+    max-height: 100vh;
 }
 
 #right-column {
@@ -55,6 +57,15 @@ body {
     width: 100%;
     text-align: center;
     position: fixed;
+}
+
+.info-table {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    font-style: italic;
+    padding-top: 25px;
 }
 
 .top-title {
