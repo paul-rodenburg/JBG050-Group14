@@ -1,5 +1,6 @@
 import hashlib
 import os
+import shutil
 import sys
 import zipfile
 import gdown
@@ -59,3 +60,7 @@ for source in sources:
                 pass
 # Remove database zip file to save space
 os.remove("../data/crime_data.zip")
+
+# Remove the unnecessary macOS folder that came with the database zip (if it exists)
+if os.path.isdir('../data/__MACOSX'):
+    shutil.rmtree('../data/__MACOSX')
