@@ -63,7 +63,21 @@ def get_number_of_articles(borough):
     df_histo = df_histo[df_histo['boroughs'].apply(lambda x: borough in x)]
     number_of_articles = len(df_histo)
     df_histo = None
-    return f'{number_of_articles} ({number_of_articles/len(df)*100:.2f}%)'
+    return f'{number_of_articles} ({number_of_articles / len(df) * 100:.2f}%)'
+
+
+def get_positive_articles(borough):
+    df_histo = df.copy()
+    df_histo = df_histo[df_histo['boroughs'].apply(lambda x: borough in x)]
+    number_of_positive_articles = len(df_histo[df_histo['sentiment_text'] > 0])
+    return number_of_positive_articles
+
+
+def get_negative_articles(borough):
+    df_histo = df.copy()
+    df_histo = df_histo[df_histo['boroughs'].apply(lambda x: borough in x)]
+    number_of_negative_articles = len(df_histo[df_histo['sentiment_text'] < 0])
+    return number_of_negative_articles
 
 
 # Convert the dictionary to DataFrames
@@ -72,13 +86,18 @@ best5_df = pd.DataFrame(list(boroughs_sentiment['best5'].items()), columns=['Bor
 best5_df['sentiment_text'] = best5_df['Borough'].apply(get_mean_text)
 best5_df['sentiment_headline'] = best5_df['Borough'].apply(get_mean_headline)
 best5_df['number_of_articles'] = best5_df['Borough'].apply(get_number_of_articles)
+best5_df['positive_articles'] = best5_df['Borough'].apply(get_positive_articles)
+best5_df['negative_articles'] = best5_df['Borough'].apply(get_negative_articles)
+best5_df['ratio_pos_neg'] = round(best5_df['positive_articles'] / best5_df['negative_articles'], 4)
 
 worst5_df = pd.DataFrame(list(boroughs_sentiment['worst5'].items()), columns=['Borough', 'Trust']).sort_values(
     by='Trust')
 worst5_df['sentiment_text'] = worst5_df['Borough'].apply(get_mean_text)
 worst5_df['sentiment_headline_'] = worst5_df['Borough'].apply(get_mean_headline)
 worst5_df['number_of_articles'] = worst5_df['Borough'].apply(get_number_of_articles)
-
+worst5_df['positive_articles'] = worst5_df['Borough'].apply(get_positive_articles)
+worst5_df['negative_articles'] = worst5_df['Borough'].apply(get_negative_articles)
+worst5_df['ratio_pos_neg'] = round(worst5_df['positive_articles'] / worst5_df['negative_articles'], 4)
 
 # Create map
 
@@ -111,7 +130,13 @@ app.layout = html.Div(
     [html.Span(id='title', children=NAME),
      html.Div(id='left-column', children=[
          html.Span(id="leaderboard-title", children='Borough Sentiment Leaderboard'),
+         html.Br(),
+         html.Br(),
+         html.Br(),
          html.Span(className="top-title", children='Most Trusted 5 Boroughs', style={'color': 'green'}),
+         html.Br(),
+         html.Br(),
+         html.Br(),
          dash_table.DataTable(
              id='best5-table',
              columns=[{"name": i, "id": i} for i in best5_df.columns],
@@ -128,6 +153,9 @@ app.layout = html.Div(
          ),
          html.Br(),
          html.Span(className="top-title", children='Least Trusted 5 Boroughs', style={'color': 'red'}),
+         html.Br(),
+         html.Br(),
+         html.Br(),
          dash_table.DataTable(
              id='worst5-table',
              columns=[{"name": i, "id": i} for i in worst5_df.columns],
@@ -142,17 +170,20 @@ app.layout = html.Div(
                  'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
              }
          ),
-         html.Span(
+         html.Div(id='info-div', children=[html.Span(
              className='info-table',
              children=[
-                 'Sentiment (computed with ',
-                 html.A('VADER', href='https://github.com/cjhutto/vaderSentiment', target='_blank'),
+                 'Sentiment (computed with',
+                 html.A('VADER', href='https://github.com/cjhutto/vaderSentiment', target='_blank',
+                        style={'padding-left': '3px'}),
                  ') is the mean over all the articles of that specific borough'
              ]
          ),
-         html.Span(className='info-table', children="Percentage in the 'number_of_articles' column is the percentage "
-                                                    'of the number of articles that that borough has compared to the '
-                                                    f'total number of articles ({len(df)})')
+             html.Span(className='info-table',
+                       children="Percentage in the 'number_of_articles' column is the percentage "
+                                'of the number of articles that that borough has compared to the '
+                                f'total number of articles ({len(df)})')])
+
      ]
               ),
      html.Div(id='right-column', children=[

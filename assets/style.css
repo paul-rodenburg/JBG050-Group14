@@ -8,10 +8,11 @@ body {
 
 #left-column {
     width: 50%;
+    height: 90vh;
     display: inline-block;
     vertical-align: top;
     margin-top: 75px;
-    overflow: scroll;
+    overflow-x: scroll;
     max-height: 100vh;
 }
 
@@ -43,11 +44,13 @@ body {
 
 
 #leaderboard-title {
-    display: block;
-    width: 100%;
-    text-align: center;
+    display: flex;
+    width: 50%;
+    justify-content: center;
     font-size: 32px;
     font-weight: bold;
+    position: fixed;
+    margin: 10px;
 }
 
 #title {
@@ -61,18 +64,29 @@ body {
 
 .info-table {
     display: block;
-    width: 100%;
     text-align: center;
     font-size: 14px;
     font-style: italic;
     padding-top: 25px;
 }
 
+#info-div {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    flex-direction: column;
+}
+
+
+
 .top-title {
     display: block;
-    width: 100%;
     text-align: center;
     font-size: 32px;
+    position: fixed;
+    width: 50%;
 }
 
 #title-histo{
