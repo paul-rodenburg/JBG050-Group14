@@ -111,7 +111,7 @@ app.layout = html.Div(
     [html.Span(id='title', children=NAME),
      html.Div(id='left-column', children=[
          html.Span(id="leaderboard-title", children='Borough Sentiment Leaderboard'),
-         html.Span(className="top-title", children='Best 5 Boroughs', style={'color': 'green'}),
+         html.Span(className="top-title", children='Most Trusted 5 Boroughs', style={'color': 'green'}),
          dash_table.DataTable(
              id='best5-table',
              columns=[{"name": i, "id": i} for i in best5_df.columns],
@@ -126,7 +126,8 @@ app.layout = html.Div(
                  'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
              }
          ),
-         html.Span(className="top-title", children='Worst 5 Boroughs', style={'color': 'red'}),
+         html.Br(),
+         html.Span(className="top-title", children='Least Trusted 5 Boroughs', style={'color': 'red'}),
          dash_table.DataTable(
              id='worst5-table',
              columns=[{"name": i, "id": i} for i in worst5_df.columns],
@@ -141,8 +142,14 @@ app.layout = html.Div(
                  'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
              }
          ),
-         html.Span(className='info-table', children='Sentiment is the mean over all the articles of that specific '
-                                                    'borough'),
+         html.Span(
+             className='info-table',
+             children=[
+                 'Sentiment (computed with ',
+                 html.A('VADER', href='https://github.com/cjhutto/vaderSentiment', target='_blank'),
+                 ') is the mean over all the articles of that specific borough'
+             ]
+         ),
          html.Span(className='info-table', children="Percentage in the 'number_of_articles' column is the percentage "
                                                     'of the number of articles that that borough has compared to the '
                                                     f'total number of articles ({len(df)})')
