@@ -114,6 +114,7 @@ color_options = [i for i in best5_df.columns if i != "Borough"]
 
 
 def make_map(color):
+    df_map['Borough'] = df_map['Borough'].replace('city of westminster', 'westminster')
     map_boroughs = px.choropleth_mapbox(df_map, geojson=geojson_data, locations='Borough',
                                         featureidkey="properties.name",
                                         color=color, color_continuous_scale="Viridis",
@@ -141,14 +142,15 @@ app.layout = html.Div(
              id='best5-table',
              columns=[{"name": i, "id": i} for i in best5_df.columns],
              data=best5_df.to_dict('records'),
-             style_table={'width': '100%', 'margin': 'auto'},
+             style_table={'width': '90%', 'margin': 'auto', 'max-width': '90%'},
              style_header={
                  'backgroundColor': 'rgb(230, 230, 230)',
                  'fontWeight': 'bold'
              },
+             fixed_columns={'headers': True, 'data': 1},
              style_cell={
                  'textAlign': 'left',
-                 'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
+                 'minWidth': '50px', 'max-width': '350px'
              }
          ),
          html.Br(),
@@ -160,14 +162,15 @@ app.layout = html.Div(
              id='worst5-table',
              columns=[{"name": i, "id": i} for i in worst5_df.columns],
              data=worst5_df.to_dict('records'),
-             style_table={'width': '100%', 'margin': 'auto'},
+             style_table={'width': '90%', 'margin': 'auto', 'max-width': '90%'},
              style_header={
                  'backgroundColor': 'rgb(230, 230, 230)',
                  'fontWeight': 'bold'
              },
+             fixed_columns={'headers': True, 'data': 1},
              style_cell={
                  'textAlign': 'left',
-                 'minWidth': '150px', 'maxWidth': '150px', 'width': '150px'
+                 'minWidth': '50px', 'max-width': '350px'
              }
          ),
          html.Div(id='info-div', children=[html.Span(

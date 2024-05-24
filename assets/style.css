@@ -12,7 +12,6 @@ body {
     display: inline-block;
     vertical-align: top;
     margin-top: 75px;
-    overflow-x: scroll;
     max-height: 100vh;
 }
 
