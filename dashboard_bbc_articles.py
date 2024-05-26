@@ -6,6 +6,9 @@ import pandas as pd
 import sqlite3
 import json
 
+# Disable pandas warning
+pd.options.mode.chained_assignment = None
+
 external_stylesheets = ['style.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 NAME = "BBC articles visualized"
@@ -32,6 +35,20 @@ boroughs_sentiment = {"best5":
                            "lambeth": 0.759375
                            }
                       }
+
+boroughs_trust = {
+    "kingston upon thames": 0.848750,
+    "bexley": 0.850313,
+    "sutton": 0.851562,
+    "city of westminster": 0.858750,
+    "kensington and chelsea": 0.860000,
+    "hackney": 0.737812,
+    "lewisham": 0.745000,
+    "haringey": 0.748437,
+    "islington": 0.756250,
+    "lambeth": 0.759375
+}
+
 boroughs = list(boroughs_sentiment["best5"].keys()) + list(boroughs_sentiment["worst5"].keys())
 
 
@@ -127,6 +144,138 @@ def make_map(color):
 
 histo, len_bbc_articles, _ = generate_histo("sentiment_text", boroughs[0], 45)
 
+ranking = {'kensington and chelsea': 1,
+           'city of westminster': 2,
+           'sutton': 3,
+           'bexley': 4,
+           'kingston upon thames': 5,
+           'hackney': 6,
+           'lewisham': 7,
+           'haringey': 8,
+           'islington': 9,
+           'lambeth': 10
+           }
+
+
+def generate_heatmap(z: str):
+    global best5_df, worst5_df
+    global ranking
+
+    best = best5_df['Borough'].values
+    worst = worst5_df['Borough'].values
+
+    df_heatmap_best = df[df['boroughs'].apply(lambda x: any(item in best for item in x))]
+    df_heatmap_worst = df[df['boroughs'].apply(lambda x: any(item in worst for item in x))]
+
+    def get_borough(borough_list):
+        global ranking
+
+        for b in borough_list:
+            if b in best:
+                return f'{b} ({ranking[b]})'
+            if b in worst:
+                return f'{b} ({ranking[b]})'
+        return None
+
+    def get_is_positive(sentiment_text):
+        if sentiment_text > 0:
+            return 1
+        else:
+            return 0
+
+    def get_trust(borough):
+        global boroughs_trust
+        borough = borough.split('(')[0]
+        borough = borough.rstrip()
+        return boroughs_trust[borough]
+
+    df_heatmap_best['borough'] = df_heatmap_best['boroughs'].apply(get_borough)
+    df_heatmap_worst['borough'] = df_heatmap_worst['boroughs'].apply(get_borough)
+
+    df_heatmap_best['is_positive'] = df_heatmap_best['sentiment_text'].apply(get_is_positive)
+    df_heatmap_worst['is_positive'] = df_heatmap_worst['sentiment_text'].apply(get_is_positive)
+
+    df_heatmap_best['trust'] = df_heatmap_best['borough'].apply(get_trust)
+    df_heatmap_worst['trust'] = df_heatmap_worst['borough'].apply(get_trust)
+
+    df_heatmap = pd.concat([df_heatmap_best, df_heatmap_worst])
+
+    # Create subplots
+    heatmap = px.density_heatmap(
+        df_heatmap,
+        x='trust',
+        y='borough',
+        z='is_positive',
+        color_continuous_scale='brwnyl',
+        nbinsx=20,
+        category_orders={'borough': ranking}
+    )
+    heatmap.update_xaxes(categoryorder="category ascending")
+    return heatmap
+
+
+def generate_scatter(x: str):
+    global best5_df, worst5_df
+    global ranking
+
+    best = best5_df['Borough'].values
+    worst = worst5_df['Borough'].values
+
+    df_scatter_best = df[df['boroughs'].apply(lambda x: any(item in best for item in x))]
+    df_scatter_worst = df[df['boroughs'].apply(lambda x: any(item in worst for item in x))]
+
+    def get_borough(borough_list):
+        global ranking
+
+        for b in borough_list:
+            if b in best:
+                return f'{b} ({ranking[b]})'
+            if b in worst:
+                return f'{b} ({ranking[b]})'
+        return None
+
+    def get_is_positive(sentiment_text):
+        if sentiment_text > 0:
+            return 1
+        else:
+            return 0
+
+    def get_trust(borough):
+        global boroughs_trust
+        borough = borough.split('(')[0]
+        borough = borough.rstrip()
+        return boroughs_trust[borough]
+
+    df_scatter_best['borough'] = df_scatter_best['boroughs'].apply(get_borough)
+    df_scatter_worst['borough'] = df_scatter_worst['boroughs'].apply(get_borough)
+
+    df_scatter_best['is_positive'] = df_scatter_best['sentiment_text'].apply(get_is_positive)
+    df_scatter_worst['is_positive'] = df_scatter_worst['sentiment_text'].apply(get_is_positive)
+
+    df_scatter_best['trust'] = df_scatter_best['borough'].apply(get_trust)
+    df_scatter_worst['trust'] = df_scatter_worst['borough'].apply(get_trust)
+
+    df_scatter = pd.concat([df_scatter_best, df_scatter_worst])
+
+    # Create subplots
+    scatter = px.scatter(
+        df_scatter,
+        x=x,
+        y='sentiment_text'
+    )
+    scatter.update_xaxes(categoryorder="category ascending")
+    if x != 'borough':
+        correlation = round(df_scatter[x].corr(df_scatter['sentiment_text']), 4)
+    else:
+        second_last_chars = df_scatter[x].str[-2]  # Extract second last character from each string in df_scatter[x]
+        correlation = round(second_last_chars.astype(float).corr(df_scatter['sentiment_text']),
+                            4)  # Compute correlation
+    return scatter, correlation
+
+
+scatter, correlation = generate_scatter('borough')
+TOTAL = 1133
+
 app.layout = html.Div(
     [html.Span(id='title', children=NAME),
      html.Div(id='left-column', children=[
@@ -190,6 +339,23 @@ app.layout = html.Div(
      ]
               ),
      html.Div(id='right-column', children=[
+         html.Span(className='title-plot',
+                   children="Heatmap of boroughs"),
+         dcc.Graph(id='heatmap', figure=generate_heatmap('negative_articles')),
+         dcc.Dropdown(className='dropdown', id='scatter-dropdown', clearable=False, value='borough',
+                      options=['borough', 'trust', 'sentiment_headline']),
+         html.Span(id='correlation-scatter', children=f"Correlation of -1 is {correlation}", className='title-plot'),
+         dcc.Graph(id='scatter', figure=scatter),
+         html.Span(id='total-input-title', children='Values to calculate percentage of:',
+                   style={'width': '100%', 'text-align': 'center', 'display': 'block'}),
+         dcc.Input(id='input-total', value=TOTAL, placeholder='Total of all: 1133', type='number'),
+         html.Button(id='set-current-total', children='Set current selected values as total'),
+         html.Span(id='selected-text-scatter', children='Selected 0 values',
+                   style={'width': '100%', 'text-align': 'center', 'font-style': 'italic', 'display': 'block'}),
+         html.Br(),
+         html.Span(className='title-plot', id="title-histo",
+                   children=f"Histogram about 'sentiment_text' of the BBC articles ({len_bbc_articles}) for borough '{boroughs[0]}' (15 bins)"),
+         html.Br(),
          dcc.Dropdown(className='dropdown', id="borough-dropdown", value=boroughs[0],
                       options=[{'label': b, 'value': b} for b in boroughs], clearable=False),
          dcc.Dropdown(className='dropdown', id="sentiment-dropdown", value="sentiment_text",
@@ -197,8 +363,6 @@ app.layout = html.Div(
                       clearable=False),
          dcc.Dropdown(className='dropdown', id="bins-dropdown", value=15,
                       options=[{'label': i, 'value': i} for i in range(1, 51)], clearable=False),
-         html.Span(id="title-histo",
-                   children=f"Histogram about 'sentiment_text' of the BBC articles ({len_bbc_articles}) for borough '{boroughs[0]}' (15 bins)"),
          dcc.Graph(figure=histo, id='histo'),
          html.Span(children="Attribute to base color on:",
                    style={'display': 'block', 'width': '100%', 'text-align': 'center'}),
@@ -223,11 +387,46 @@ def update_histo(borough, sentiment, bins):
     return histo_return, title_histo
 
 
+number_selected_points = TOTAL
+
+
+@app.callback(Output('input-total', 'value'),
+              Input('set-current-total', 'n_clicks'))
+def update_total(n_clicks):
+    if n_clicks:
+        return number_selected_points
+    else:
+        return dash.no_update
+
+@app.callback(Output('selected-text-scatter', 'children'),
+              [Input('scatter', 'selectedData'),
+               Input('input-total', 'value')])
+def update_scatter_data(selectedData, total):
+    global number_selected_points
+    if total is None:
+        total = TOTAL
+    number_selected_points = len(selectedData['points'])
+    if selectedData:
+        return f"Selected {number_selected_points} values ({number_selected_points / total * 100:.2f}% of total ({total}))"
+    else:
+        return f"Selected 0 values (0% of total ({total}))"
+
+
+@app.callback([Output('scatter', 'figure'),
+               Output('correlation-scatter', 'children')],
+              [Input('scatter-dropdown', 'value')])
+def update_scatter(x):
+    scatter, correlation = generate_scatter(x)
+    if x == 'borough':
+        x = f'{x} (ranking)'
+    correlation_text = f"Correlation between {x} and sentiment_text is {correlation}"
+    return scatter, correlation_text
+
+
 @app.callback(Output('map-boroughs', 'figure'),
               [Input('color-dropdown', 'value')])
 def update_map(color_attribute):
     map_boroughs_return = make_map(color_attribute)
-    print(f"Updated map with {color_attribute}")
     return map_boroughs_return
 
 

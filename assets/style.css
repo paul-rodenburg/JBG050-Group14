@@ -88,11 +88,38 @@ body {
     width: 50%;
 }
 
-#title-histo{
+.title-plot{
     display: block;
     width: 100%;
     text-align: center;
     font-size: 18px;
     color: black;
     font-weight: bold;
+}
+
+#set-current-total {
+    margin: 10px auto;
+    display: block;
+    color: white;
+    background-color: black;
+    border-radius: 500px;
+    border: 0;
+    cursor: pointer;
+    padding: 16px;
+    font-weight: bold;
+}
+
+#set-current-total:hover {
+    background-color: #333333;
+}
+
+#input-total {
+    margin: auto;
+    display: block;
+    color: #000000;
+    background-color: #dcdcdc;
+    border-radius: 5px;
+    border: 0;
+    padding: 5px;
+    text-align: center;
 }
