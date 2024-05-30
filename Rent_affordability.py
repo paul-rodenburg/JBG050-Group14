@@ -4,10 +4,100 @@ import matplotlib.pyplot as plt
 df_unemp = pd.read_csv('data/unemploymentRates.csv', delimiter = ';')
 df_unemp = df_unemp.set_index('Area')
 df_unemp = df_unemp.map(lambda x: float(x.replace(',', '.')))
+
+def get_df_crime(file_path):
+    df_crime = pd.read_csv(file_path, delimiter = ',')
+    df_crime = df_crime[['Crime ID', 'Month', 'borough']]
+
+    df_crime['Month'] = pd.to_datetime(df_crime['Month'])
+
+    # Filter out dates before 2016 and after 2023
+    df_crime = df_crime[df_crime['Month'].dt.year >= 2016]
+    df_crime = df_crime[df_crime['Month'].dt.year <= 2023]
+
+    df_crime['Month'] = pd.to_datetime(df_crime['Month'], format='%Y-%m')
+    grouped_crime = df_crime.groupby(
+        [df_crime['Month'].dt.year.rename('Year'), 'borough']).size().reset_index(name='Count')
+
+    pivot_df_crime = grouped_crime.pivot(index='Year', columns='borough', values='Count')
+    return pivot_df_crime
+
+df_crime_best = get_df_crime('data/metropolitan_normal_with_best_boroughs.csv')
+df_crime_worst = get_df_crime('data/metropolitan_normal_with_worst_boroughs.csv')
+
+del df_crime_best['Westminster']
+
+borough_order = ["Kensington and Chelsea", "Sutton", "Bexley", "Kingston upon Thames"]
+#borough_order1 = ["Lambeth", "Islington", "Haringey", "Lewisham", "Hackney"]
+
+#plotting line charts
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+#unemployment plot 1
+df_unemp.loc[["Kensington and Chelsea", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(kind='line', marker='o', ax=ax1)
+ax1.set_title('Unemployment Rate per Most Trusting Boroughs')
+ax1.set_xlabel('Fiscal Year')
+ax1.set_ylabel('Unemployment Rate')
+ax1.grid(True)
+ax1.legend(title='Borough')
+ax1.tick_params(axis='x', labelrotation=45)
+
+#crime plot 1
+df_crime_best = df_crime_best[borough_order]
+df_crime_best.plot(kind='line', marker='o', ax=ax2)
+ax2.set_xlabel('Year')
+ax2.set_ylabel('Crime Count')
+ax2.set_title('Total Crimes per Most Trusting Boroughs')
+ax2.legend(title='Borough')
+ax2.grid(True)
+
+plt.tight_layout()
+plt.show()
+'''
+#plotting line charts
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 14))
+#unemployment plot 1
+df_unemp.loc[["Kensington and Chelsea", "Westminster", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(kind='line', marker='o', ax=ax1)
+ax1.set_title('Unemployment Rate per Most Trusting Boroughs')
+ax1.set_xlabel('Fiscal Year')
+ax1.set_ylabel('Unemployment Rate')
+ax1.grid(True)
+ax1.legend(title='Borough')
+ax1.tick_params(axis='x', labelrotation=45)
+
+#crime plot 1
+df_crime_best = df_crime_best[borough_order]
+df_crime_best.plot(kind='line', marker='o', ax=ax2)
+ax2.set_xlabel('Year')
+ax2.set_ylabel('Crime Count')
+ax2.set_title('Total Crimes per Most Trusting Boroughs')
+ax2.legend(title='Borough')
+ax2.grid(True)
+
+#unemployment plot 2
+df_unemp.loc[["Lambeth", "Islington", "Haringey", "Lewisham", "Hackney"]].transpose().plot(kind='line', marker='o', ax=ax3)
+ax3.set_title('Unemployment Rate per Least Trusting Boroughs')
+ax3.set_xlabel('Fiscal Year')
+ax3.set_ylabel('Unemployment Rate')
+ax3.grid(True)
+ax3.legend(title='Borough')
+ax3.tick_params(axis='x', labelrotation=45)
+
+#crime plot 2
+df_crime_worst = df_crime_worst[borough_order1]
+df_crime_worst.plot(kind='line', marker='o', ax=ax4)
+ax4.set_xlabel('Year')
+ax4.set_ylabel('Crime Count')
+ax4.set_title('Total Crimes per Least Trusting Boroughs')
+ax4.legend(title='Borough')
+ax4.grid(True)
+
+plt.tight_layout()
+plt.show()
+'''
+'''
 #plotting line charts
 df_unemp.loc[["Kensington and Chelsea", "Westminster", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(kind='line', marker='o', figsize=(12, 8))
 df_unemp.loc[["London"]].transpose().plot(kind='line', marker='o', linewidth=3, ax=plt.gca())
-
 plt.title('Unemployment Rate per Most Trusting Boroughs')
 plt.xlabel('Fiscal Year')
 plt.ylabel('Unemployment Rate')
@@ -15,7 +105,7 @@ plt.grid(True)
 plt.legend(title='Borough')
 plt.show()
 print(df_unemp)
-
+'''
 
 '''
 
