@@ -1,0 +1,125 @@
+/* styles.css */
+
+body {
+    font-family: 'Roboto', sans-serif;
+    /*background-color: #141C1E;*/
+    overflow: hidden;
+}
+
+#left-column {
+    width: 80%;
+    height: 90vh;
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 75px;
+    max-height: 100vh;
+}
+
+#right-column {
+    width: 50%;
+    display: inline-block;
+    vertical-align: top;
+    overflow-y: auto;
+    max-height: 100vh;
+    margin-top: 75px;
+}
+
+#histo {
+    width: 800px;
+    height: 800px;
+    display: block;
+    margin: 0 auto;
+}
+
+#map-boroughs {
+    width: 100%;
+    height: 800px;
+}
+.dropdown {
+    display: block;
+    margin: 0 auto;
+    width: 250px;
+}
+
+
+#leaderboard-title {
+    display: flex;
+    width: 75%;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    position: fixed;
+    margin: 10px;
+}
+
+#title {
+    font-size: 48px;
+    font-weight: bold;
+    display: block;
+    width: 100%;
+    text-align: center;
+    position: fixed;
+}
+
+.info-table {
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    font-style: italic;
+    padding-top: 25px;
+}
+
+#info-div {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    flex-direction: column;
+}
+
+
+
+.top-title {
+    display: block;
+    text-align: center;
+    font-size: 32px;
+    position: fixed;
+    width: 75%;
+}
+
+.title-plot{
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    color: black;
+    font-weight: bold;
+}
+
+#set-current-total {
+    margin: 10px auto;
+    display: block;
+    color: white;
+    background-color: black;
+    border-radius: 500px;
+    border: 0;
+    cursor: pointer;
+    padding: 16px;
+    font-weight: bold;
+}
+
+#set-current-total:hover {
+    background-color: #333333;
+}
+
+#input-total {
+    margin: auto;
+    display: block;
+    color: #000000;
+    background-color: #dcdcdc;
+    border-radius: 5px;
+    border: 0;
+    padding: 5px;
+    text-align: center;
+}

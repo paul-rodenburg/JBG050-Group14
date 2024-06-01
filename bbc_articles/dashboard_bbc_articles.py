@@ -15,7 +15,7 @@ NAME = "BBC articles visualized"
 q = """SELECT sentiment_text, sentiment_headline, boroughs
     FROM BBC_articles
     WHERE boroughs IS NOT NULL"""
-conn = sqlite3.connect('data/crime_data.db')
+conn = sqlite3.connect('../data/crime_data.db')
 df = pd.read_sql_query(q, conn)
 # Convert the string representation of lists to actual lists
 df["boroughs"] = df["boroughs"].apply(lambda x: eval(x))
@@ -119,7 +119,7 @@ worst5_df['ratio_pos_neg'] = round(worst5_df['positive_articles'] / worst5_df['n
 # Create map
 
 # Load GeoJSON data
-with open('london_boroughs.geojson') as f:
+with open('../london_boroughs.geojson') as f:
     geojson_data = json.load(f)
 
 df_map = pd.concat([best5_df, worst5_df], ignore_index=True)
