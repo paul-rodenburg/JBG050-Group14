@@ -39,3 +39,40 @@ def download(url: str, fname: str, chunk_size=1024):
         for data in resp.iter_content(chunk_size=chunk_size):
             size = file.write(data)
             bar.update(size)
+
+
+def get_trust(BEST=True, get_all=False, sqlite_path='../data/crime_data.db'):
+    boroughs_trust = {
+        "kingston upon thames": 0.848750,
+        "bexley": 0.850313,
+        "sutton": 0.851562,
+        "city of westminster": 0.858750,
+        "kensington and chelsea": 0.860000,
+        "hackney": 0.737812,
+        "lewisham": 0.745000,
+        "haringey": 0.748437,
+        "islington": 0.756250,
+        "lambeth": 0.759375
+    }
+    if get_all:
+        selected_boroughs = list(boroughs_trust.keys())
+    else:
+        selected_boroughs = sorted(boroughs_trust, key=boroughs_trust.get, reverse=BEST)[:5]
+    conn = sqlite3.connect(sqlite_path)
+    q = 'SELECT * FROM Trust'
+    df_PAS = pd.read_sql_query(q, conn)
+    df_PAS['Date'] = pd.to_datetime(df_PAS['Date'])
+    df_PAS = df_PAS[df_PAS['Borough'].str.lower().isin(selected_boroughs)]
+
+    df_PAS['Year'] = df_PAS['Date'].dt.year
+    columns_to_keep_pas = ['Year', 'Borough', 'Proportion']
+    df_PAS = df_PAS[columns_to_keep_pas]
+    df_PAS = df_PAS.rename(columns={'Proportion': 'Trust'})
+
+    df_PAS = df_PAS.pivot_table(index='Year', columns='Borough', values='Trust', aggfunc='mean')
+
+    # Reset index if needed
+    df_PAS.reset_index(inplace=True)
+    df_PAS = df_PAS.rename(columns={'year': 'Year'})
+    df_PAS.set_index('Year', inplace=True)
+    return df_PAS

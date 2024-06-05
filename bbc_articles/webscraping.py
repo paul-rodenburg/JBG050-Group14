@@ -27,12 +27,12 @@ def extract_links_from_html(file_path):
 
     return links_return
 
-files_os = os.listdir("data\\bbc")
+files_os = os.listdir("../data/bbc")
 # Filter only the .zip files
 html_files = [file for file in files_os if file.endswith('.html')]
 links = []
 for file in html_files:
-    path = f'data\\bbc\\{file}'
+    path = f'.\\data\\bbc\\{file}'
     links.extend(extract_links_from_html(path))
 
 errors = 0
@@ -89,9 +89,9 @@ for url in links:
 df = pd.DataFrame(articles)
 df['text'] = df['text'].str.strip()
 df['headline'] = df['headline'].str.strip()
-df.to_parquet('data/bbc.parquet')
+df.to_parquet('../data/bbc.parquet')
 
-sqlite_db_path = 'data/crime_data.db'
+sqlite_db_path = '../data/crime_data.db'
 # Define the SQLite table name
 table_name = "BBC_articles"
 print(f"Beginning SQL conversion of {table_name} into {sqlite_db_path}")

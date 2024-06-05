@@ -1,32 +1,39 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+
 borough_order = ["Kensington and Chelsea", "Westminster", "Sutton", "Bexley", "Kingston upon Thames", "London"]
 borough_order1 = ["Lambeth", "Islington", "Haringey", "Lewisham", "Hackney", "London"]
-df_unemp = pd.read_csv('data/unemploymentRates.csv', delimiter = ';')
+df_unemp = pd.read_csv('../data/economic/unemploymentRates.csv', delimiter=';')
 df_unemp = df_unemp.set_index('Area')
 df_unemp = df_unemp.map(lambda x: float(x.replace(',', '.')))
 
+
 def get_df_income(file_path):
-    df = pd.read_excel(file_path, sheet_name="Total, Hourly", usecols= "A,P:V")
+    df = pd.read_excel(file_path, sheet_name="Total, Hourly", usecols="A,P:V")
     for col in df.columns[1:]:
         df[col] = df[col].astype(str).str.replace(',', '.')
         df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
-df_income = get_df_income('data/earnings-residence-borough.xlsx')
-df_income_best = df_income.loc[df_income["Area"].isin(borough_order1)] #edit the borough order for most/least trusting boroughs
+
+
+df_income = get_df_income('../data/economic/earnings-residence-borough.xlsx')
+df_income_best = df_income.loc[
+    df_income["Area"].isin(borough_order1)]  #edit the borough order for most/least trusting boroughs
 df_income_best = df_income_best.set_index(df_income.columns[0]).transpose()
 
 print(df_income_best)
 #plot
-df_income_best.plot(kind = "line", marker='o', linewidth=3, ax=plt.gca())
+df_income_best.plot(kind="line", marker='o', linewidth=3, ax=plt.gca())
 plt.title('Hourly Income by Borough')
 plt.xlabel('Year')
 plt.ylabel('Income (Hourly)')
 plt.grid(True)
 plt.legend(title='Borough')
 plt.show()
+
+
 def get_df_crime(file_path):
-    df_crime = pd.read_csv(file_path, delimiter = ',')
+    df_crime = pd.read_csv(file_path, delimiter=',')
     df_crime = df_crime[['Crime ID', 'Month', 'borough']]
 
     df_crime['Month'] = pd.to_datetime(df_crime['Month'])
@@ -41,13 +48,17 @@ def get_df_crime(file_path):
 
     pivot_df_crime = grouped_crime.pivot(index='Year', columns='borough', values='Count')
     return pivot_df_crime
+
+
 def unemp_crime_best(df_crime_best):
-    df_crime_best = get_df_crime('data/metropolitan_normal_with_best_boroughs.csv')
+    df_crime_best = get_df_crime('data/economic/metropolitan_normal_with_best_boroughs.csv')
     del df_crime_best['Westminster']
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     #unemployment plot 1
-    df_unemp.loc[["Kensington and Chelsea", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(kind='line', marker='o', ax=ax1)
+    df_unemp.loc[["Kensington and Chelsea", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(kind='line',
+                                                                                                          marker='o',
+                                                                                                          ax=ax1)
     ax1.set_title('Unemployment Rate per Most Trusting Boroughs')
     ax1.set_xlabel('Fiscal Year')
     ax1.set_ylabel('Unemployment Rate')
@@ -66,13 +77,17 @@ def unemp_crime_best(df_crime_best):
 
     plt.tight_layout()
     plt.show()
+
+
 def four_plots(df_crime_best, df_crime_worst):
     df_crime_best = get_df_crime('data/metropolitan_normal_with_best_boroughs.csv')
     df_crime_worst = get_df_crime('data/metropolitan_normal_with_worst_boroughs.csv')
     #plotting line charts
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(20, 14))
     #unemployment plot 1
-    df_unemp.loc[["Kensington and Chelsea", "Westminster", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(kind='line', marker='o', ax=ax1)
+    df_unemp.loc[
+        ["Kensington and Chelsea", "Westminster", "Sutton", "Bexley", "Kingston upon Thames"]].transpose().plot(
+        kind='line', marker='o', ax=ax1)
     ax1.set_title('Unemployment Rate per Most Trusting Boroughs')
     ax1.set_xlabel('Fiscal Year')
     ax1.set_ylabel('Unemployment Rate')
@@ -90,7 +105,8 @@ def four_plots(df_crime_best, df_crime_worst):
     ax2.grid(True)
 
     #unemployment plot 2
-    df_unemp.loc[["Lambeth", "Islington", "Haringey", "Lewisham", "Hackney"]].transpose().plot(kind='line', marker='o', ax=ax3)
+    df_unemp.loc[["Lambeth", "Islington", "Haringey", "Lewisham", "Hackney"]].transpose().plot(kind='line', marker='o',
+                                                                                               ax=ax3)
     ax3.set_title('Unemployment Rate per Least Trusting Boroughs')
     ax3.set_xlabel('Fiscal Year')
     ax3.set_ylabel('Unemployment Rate')
@@ -109,6 +125,7 @@ def four_plots(df_crime_best, df_crime_worst):
 
     plt.tight_layout()
     plt.show()
+
 
 '''
 #plotting line charts
