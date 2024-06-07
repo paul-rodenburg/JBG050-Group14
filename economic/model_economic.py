@@ -5,6 +5,9 @@ import pandas as pd
 import numpy as np
 from generate_database.functions import get_trust
 from generate_database.functions import download
+import os
+
+DOWNLOAD_HOUSE_PRICES = True  # Set to False ONLY when you already have downloaded the house price data
 
 # prices download URL (period and region can be changed): https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Flondon
 
@@ -23,22 +26,30 @@ boroughs_trust = {
     "lambeth": 0.759375
 }
 
+if not os.path.isdir('../data/economic/house_prices'):  # Make the house_prices folder inside data/economic
+    # if it doesn't exist already
+    os.mkdir('../data/economic/house_prices')
+
 
 def get_link(borough):  # Return the link to the download for the house price csv
     borough = borough.replace(" ", "-")
     return f'https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2F{borough}'
 
 
-for borough in boroughs_trust.keys():  # Download all the house prices csv files for the 5 most
-    # and 5 least trusted boroughs
-    url = get_link(borough)
-    save_path = f'../data/economic/house_prices/{borough}_house_prices.csv'
-    download(url, save_path)
-    time.sleep(1)  # Wait a bit for the download to be finished
-    df = pd.read_csv(save_path)
-    if len(df) < 5:
-        print(f'Error with {save_path.split("/")[-1]}; only has {len(df)} rows, probably the borough '
-              f'name is not the same as in the house price database...')
+if DOWNLOAD_HOUSE_PRICES:
+    print(f'Downloading house price data for {len(list(boroughs_trust.keys()))} boroughs')
+    for borough in boroughs_trust.keys():  # Download all the house prices csv files for the 5 most
+        # and 5 least trusted boroughs
+        url = get_link(borough)
+        save_path = f'../data/economic/house_prices/{borough}_house_prices.csv'
+        download(url, save_path)
+        time.sleep(1)  # Wait a bit for the download to be finished
+        df = pd.read_csv(save_path)
+        if len(df) < 5:
+            print(f'Error with {save_path.split("/")[-1]}; only has {len(df)} rows, probably the borough '
+                  f'name is not the same as in the house price database...')
+print('Finished downloading the house price data! Now making the linear regression model...')
+
 
 years = list(range(2016, 2023))  # Range of years to get data of; 2016 - 2023 is the years all the databases have
 
@@ -101,9 +112,8 @@ for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each b
         # prices.append(price)
 
         # House prices (needs to be implemented)
-        df_prices = pd.read_csv('../data/economic/Average-prices-2024-03.csv')
+        df_prices = pd.read_csv(f'../data/economic/house_prices/{BOROUGH.replace(" ", "-")}_house_prices.csv')
         df_prices = df_prices[df_prices['']]
-
 
 # Make the model
 x = []
