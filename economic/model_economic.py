@@ -1,11 +1,15 @@
+import time
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score, cross_validate
 import pandas as pd
 import numpy as np
 from generate_database.functions import get_trust
+from generate_database.functions import download
 
+# prices download URL (period and region can be changed): https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Flondon
 
-# prices download URL (period can be changed): https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Flondon
-
+# Dictionary with name of borough as key and as value the mean trust of that borough of the years
+# These are the 5 most and 5 least trusted boroughs (based on the mean trust value)
 boroughs_trust = {
     "kingston upon thames": 0.848750,
     "bexley": 0.850313,
@@ -19,26 +23,39 @@ boroughs_trust = {
     "lambeth": 0.759375
 }
 
-codes_borough = {
 
-}
-years = list(range(2016, 2023))
+def get_link(borough):  # Return the link to the download for the house price csv
+    borough = borough.replace(" ", "-")
+    return f'https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2F{borough}'
+
+
+for borough in boroughs_trust.keys():  # Download all the house prices csv files for the 5 most
+    # and 5 least trusted boroughs
+    url = get_link(borough)
+    save_path = f'../data/economic/house_prices/{borough}_house_prices.csv'
+    download(url, save_path)
+    time.sleep(1)  # Wait a bit for the download to be finished
+    df = pd.read_csv(save_path)
+    if len(df) < 5:
+        print(f'Error with {save_path.split("/")[-1]}; only has {len(df)} rows, probably the borough '
+              f'name is not the same as in the house price database...')
+
+years = list(range(2016, 2023))  # Range of years to get data of; 2016 - 2023 is the years all the databases have
 
 statistics = []
 y = []
 
-
 earnings = []
 prices = []
 unemployment = []
-for BOROUGH in list(boroughs_trust.keys()):
+for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each borough
     df_trust = get_trust(get_all=True)
     df_trust.columns = map(str.lower, df_trust.columns)
     df_trust = df_trust[df_trust.index.isin(years)]
     y = y + df_trust[BOROUGH.lower()].to_list()
     df_unemp = pd.read_csv('../data/economic/unemploymentRates.csv', delimiter=';')
 
-    for column in df_unemp.columns[1:]:
+    for column in df_unemp.columns[1:]:  # Make float values from the unemployment rate
         # Replace commas with dots and convert to floats
         df_unemp[column] = df_unemp[column].str.replace(',', '.').astype(float)
 
@@ -51,8 +68,8 @@ for BOROUGH in list(boroughs_trust.keys()):
             return False
 
 
-
-    BOROUGH = BOROUGH.replace('city of ', '')
+    BOROUGH = BOROUGH.replace('city of ', '')  # 'City of Westminster' is stored in the databases as
+    # 'Westminster' so remove the 'City of ' part
     for i in range(len(years)):
         year_list = []
         # Unemployment values
@@ -83,30 +100,25 @@ for BOROUGH in list(boroughs_trust.keys()):
         # price = float(price.values[0].replace(',', '.'))
         # prices.append(price)
 
-        # House prices
+        # House prices (needs to be implemented)
         df_prices = pd.read_csv('../data/economic/Average-prices-2024-03.csv')
+        df_prices = df_prices[df_prices['']]
 
 
 # Make the model
-
 x = []
 for i in range(len(earnings)):
     x.append([unemployment[i], earnings[i], prices[i]])
 
-
-x, y = np.array(x), np.array(y)
+x, y = np.array(x), np.array(y)  # Arrays needs to be a numpy array to work with the LinearRegression function
 model = LinearRegression().fit(x, y)
 r_sq = model.score(x, y)
 coeffs = model.coef_
 
 statistics.append({'Borough': 'ALL', 'R_sq': r_sq, 'Intercept': model.intercept_, 'Coefficient_unemp': coeffs[0],
                    'Coefficient_earnings': coeffs[1], 'Coefficient_housePrice': coeffs[2]})
-# print(f"coefficient of determination: {r_sq}")
-#
-# print(f"intercept: {model.intercept_}")
-#
-# print(f"coefficients: {model.coef_}")
 
-df_statistics = pd.DataFrame(statistics)
-df_statistics.to_excel('statistics.xlsx')
+scores = cross_val_score(model, x, y, cv=5)
+df_statistics = pd.DataFrame(statistics)  # Make a dataframe from the model's statistics
+df_statistics.to_excel('statistics.xlsx')  # Save the statistics dataframe as an excel file
 print('Statistics of model saved to economic/statistics.xlsx')
