@@ -7,7 +7,7 @@ from generate_database.functions import get_trust
 from generate_database.functions import download
 import os
 
-DOWNLOAD_HOUSE_PRICES = True  # Set to False ONLY when you already have downloaded the house price data
+DOWNLOAD_HOUSE_PRICES = False  # Set to False ONLY when you already have downloaded the house price data
 
 # prices download URL (period and region can be changed): https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Flondon
 
@@ -102,7 +102,6 @@ for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each b
         value_earning = [i for i in value_earning if is_float(i)]
         value_earning = value_earning[i]
         earnings.append(value_earning)
-
         # House prices (ratio)
         # df_prices = pd.read_csv('../data/economic/ratio-house-price-earnings-residence-based.csv', delimiter=';')
         # df_prices = df_prices.dropna(axis='rows', how='all')
@@ -113,7 +112,27 @@ for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each b
 
         # House prices (needs to be implemented)
         df_prices = pd.read_csv(f'../data/economic/house_prices/{BOROUGH.replace(" ", "-")}_house_prices.csv')
-        df_prices = df_prices[df_prices['']]
+        df_prices = df_prices[df_prices['Name'].str.lower() == BOROUGH.lower()]
+        df_prices['Year'] = df_prices['Period'].apply(lambda x: int(x.split('-')[0]))
+        df_prices = df_prices[df_prices['Year'].isin(years)]
+
+        # this snippet is because I keep getting files downloaded in welsh
+        possible_price_cols = ['Average price All property types', 'Pris cyfartalog Pob math o eiddo']
+        price_col = next((col for col in df_prices.columns if col in possible_price_cols), None)
+        if not price_col:
+            print(f"column not found")
+            continue
+
+        df_prices = df_prices.groupby(['Name', 'Year'])[price_col].mean().reset_index()
+        df_prices = df_prices.pivot_table(index='Year', columns='Name', values=price_col)
+        df_prices = df_prices.transpose()
+        df_prices.reset_index(inplace=True)
+        df_prices.rename(columns={'index': 'Name'}, inplace=True)
+        value_prices = df_prices.values[0]
+        value_prices = [i for i in value_prices if is_float(i)]
+        value_prices = value_prices[i]
+        prices.append(value_prices)
+        print(prices)
 
 # Make the model
 x = []
