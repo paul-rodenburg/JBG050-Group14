@@ -42,6 +42,9 @@ def download(url: str, fname: str, chunk_size=1024):
 
 
 def get_trust(BEST=True, get_all=False, sqlite_path='../data/crime_data.db'):
+    conn = sqlite3.connect(sqlite_path)
+    q = 'SELECT * FROM Trust'
+    df_PAS = pd.read_sql_query(q, conn)
     boroughs_trust = {
         "kingston upon thames": 0.848750,
         "bexley": 0.850313,
@@ -55,12 +58,11 @@ def get_trust(BEST=True, get_all=False, sqlite_path='../data/crime_data.db'):
         "lambeth": 0.759375
     }
     if get_all:
-        selected_boroughs = list(boroughs_trust.keys())
+        selected_boroughs = list(set(df_PAS['Borough'].values))
+        selected_boroughs = [i.lower() for i in selected_boroughs]
     else:
         selected_boroughs = sorted(boroughs_trust, key=boroughs_trust.get, reverse=BEST)[:5]
-    conn = sqlite3.connect(sqlite_path)
-    q = 'SELECT * FROM Trust'
-    df_PAS = pd.read_sql_query(q, conn)
+
     df_PAS['Date'] = pd.to_datetime(df_PAS['Date'])
     df_PAS = df_PAS[df_PAS['Borough'].str.lower().isin(selected_boroughs)]
 

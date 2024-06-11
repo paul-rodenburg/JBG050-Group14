@@ -6,25 +6,20 @@ import numpy as np
 from generate_database.functions import get_trust
 from generate_database.functions import download
 import os
+import sqlite3
 
-DOWNLOAD_HOUSE_PRICES = True  # Set to False ONLY when you already have downloaded the house price data
+DOWNLOAD_HOUSE_PRICES = False  # Set to False ONLY when you already have downloaded the house price data
 
 # prices download URL (period and region can be changed): https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Flondon
 
 # Dictionary with name of borough as key and as value the mean trust of that borough of the years
 # These are the 5 most and 5 least trusted boroughs (based on the mean trust value)
-boroughs_trust = {
-    "kingston upon thames": 0.848750,
-    "bexley": 0.850313,
-    "sutton": 0.851562,
-    "city of westminster": 0.858750,
-    "kensington and chelsea": 0.860000,
-    "hackney": 0.737812,
-    "lewisham": 0.745000,
-    "haringey": 0.748437,
-    "islington": 0.756250,
-    "lambeth": 0.759375
-}
+q_boroughs = 'SELECT Borough FROM Trust'
+conn = sqlite3.connect('../data/crime_data.db')
+df_boroughs = pd.read_sql_query(q_boroughs, conn)
+conn.close()
+boroughs = list(set(df_boroughs['Borough'].values))
+
 
 if not os.path.isdir('../data/economic/house_prices'):  # Make the house_prices folder inside data/economic
     # if it doesn't exist already
@@ -32,18 +27,18 @@ if not os.path.isdir('../data/economic/house_prices'):  # Make the house_prices 
 
 
 def get_link(borough):  # Return the link to the download for the house price csv
-    borough = borough.replace(" ", "-")
+    borough = borough.replace(" ", "-").lower()
     return f'https://landregistry.data.gov.uk/app/ukhpi/download/new.csv?from=2014-01-01&to=2023-12-31&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2F{borough}'
 
 
 if DOWNLOAD_HOUSE_PRICES:
-    print(f'Downloading house price data for {len(list(boroughs_trust.keys()))} boroughs')
-    for borough in boroughs_trust.keys():  # Download all the house prices csv files for the 5 most
+    print(f'Downloading house price data for {len(list(boroughs))} boroughs')
+    for borough in boroughs:  # Download all the house prices csv files for the 5 most
         # and 5 least trusted boroughs
         url = get_link(borough)
-        save_path = f'../data/economic/house_prices/{borough}_house_prices.csv'
+        save_path = f'../data/economic/house_prices/{borough.lower()}_house_prices.csv'
         download(url, save_path)
-        time.sleep(1)  # Wait a bit for the download to be finished
+        # time.sleep(1)  # Wait a bit for the download to be finished
         df = pd.read_csv(save_path)
         if len(df) < 5:
             print(f'Error with {save_path.split("/")[-1]}; only has {len(df)} rows, probably the borough '
@@ -59,10 +54,11 @@ y = []
 earnings = []
 prices = []
 unemployment = []
-for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each borough
+for BOROUGH in boroughs:  # Get first all the data for each borough
     df_trust = get_trust(get_all=True)
     df_trust.columns = map(str.lower, df_trust.columns)
     df_trust = df_trust[df_trust.index.isin(years)]
+    df_trust = df_trust.dropna(axis='columns', how='all')  # Sometimes there is a dataframe with a column with only NULL values: remove this column
     y = y + df_trust[BOROUGH.lower()].to_list()
     df_unemp = pd.read_csv('../data/economic/unemploymentRates.csv', delimiter=';')
 
@@ -78,24 +74,23 @@ for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each b
         except ValueError:
             return False
 
-
-    BOROUGH = BOROUGH.replace('city of ', '')  # 'City of Westminster' is stored in the databases as
-    # 'Westminster' so remove the 'City of ' part
     for i in range(len(years)):
         year_list = []
         # Unemployment values
-        unemp_values = df_unemp[df_unemp['Area'].str.lower() == BOROUGH.lower()].values.tolist()
+        borough_unemp = BOROUGH.lower().replace('city of ', '')
+        unemp_values = df_unemp[df_unemp['Area'].str.lower() == borough_unemp].values.tolist()
         try:
             unemp_values = unemp_values[0]
         except:
-            print(f'Error!: {unemp_values}; for borough: {BOROUGH}')
+            print(f'Error!: {unemp_values}; for borough: {BOROUGH} ({borough_unemp})')
+            print(df_unemp)
 
         unemp_values = [i for i in unemp_values if is_float(i)]
         unemployment.append(unemp_values[i])
 
         # Earnings
         df_earning = pd.read_excel('../data/economic/earnings-residence-borough.xlsx', sheet_name='Total, Hourly')
-        df_earning = df_earning[df_earning['Area'].str.lower() == BOROUGH.lower()]
+        df_earning = df_earning[df_earning['Area'].str.lower() == BOROUGH.lower().replace('city of ', '')]
         cols = ['Area'] + years
         df_earning = df_earning[cols]
         value_earning = df_earning.values.tolist()[0]
@@ -112,8 +107,16 @@ for BOROUGH in list(boroughs_trust.keys()):  # Get first all the data for each b
         # prices.append(price)
 
         # House prices (needs to be implemented)
-        df_prices = pd.read_csv(f'../data/economic/house_prices/{BOROUGH.replace(" ", "-")}_house_prices.csv')
-        df_prices = df_prices[df_prices['']]
+        df_prices = pd.read_csv(f'../data/economic/house_prices/{BOROUGH.lower()}_house_prices.csv')
+        df_prices['Period'] = pd.to_datetime(df_prices['Period'])
+        df_prices['Year'] = df_prices['Period'].dt.year
+        df_prices = df_prices[df_prices['Year'] == years[i]]
+        col = list(df_prices.columns)[6]  # Sometimes the column names have weird names so we just select the 7th one, which is always the price of all properties
+        try:
+            price = df_prices[col].mean()
+        except Exception as e:
+            print(f'Error!: ({e}): {df_prices} \nfor borough: {BOROUGH}; year: {years[i]}\ncolumns: {df_prices.columns}')
+        prices.append(price)
 
 # Make the model
 x = []
@@ -125,7 +128,7 @@ model = LinearRegression().fit(x, y)
 r_sq = model.score(x, y)
 coeffs = model.coef_
 
-statistics.append({'Borough': 'ALL', 'R_sq': r_sq, 'Intercept': model.intercept_, 'Coefficient_unemp': coeffs[0],
+statistics.append({'Boroughs': len(boroughs), 'R_sq': r_sq, 'Intercept': model.intercept_, 'Coefficient_unemp': coeffs[0],
                    'Coefficient_earnings': coeffs[1], 'Coefficient_housePrice': coeffs[2]})
 
 scores = cross_val_score(model, x, y, cv=5)
