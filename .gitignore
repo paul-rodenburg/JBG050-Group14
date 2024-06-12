@@ -1,6 +1,7 @@
 data/
 .idea/
 .DS_Store
+economic/stats/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
