@@ -28,7 +28,7 @@ pivot_table = filtered_df.pivot_table(index='Area', columns='Year', values='Prop
 
 # plotting heatmap
 plt.figure(figsize=(14, 8))
-sns.heatmap(pivot_table, annot=True, cmap='RdYlGn_r', cbar_kws={'label': 'Ratio (Full-time to Part-time)'})
+sns.heatmap(pivot_table, annot=True, cmap='coolwarm', cbar_kws={'label': 'Ratio (Full-time to Part-time)'})
 boroughs = pivot_table.index.tolist()
 line_position = boroughs.index("Lambeth")
 plt.axhline(y=line_position, color='black', linewidth=2)
