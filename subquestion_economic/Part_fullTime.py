@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-xls = pd.ExcelFile('data/employment-status-by-genderxls.xlsx')
+xls = pd.ExcelFile('../data/employment-status-by-genderxls.xlsx')
 ordered_boroughs = [
     "Kensington and Chelsea", "Westminster", "Sutton", "Bexley", "Kingston upon Thames",
     "Lambeth", "Islington", "Haringey", "Lewisham", "Hackney"

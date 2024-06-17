@@ -180,7 +180,9 @@ def make_economic_model(boroughs):
         plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], 'k--', lw=3)
         plt.xlabel('Actual')
         plt.ylabel('Predicted')
-        plt.title('Actual vs Predicted Trust in Borough')
+        plt.title(f'Actual vs Predicted Trust in {len(boroughs)} Boroughs')
+        plt.xlim((0.7, 0.95))
+        plt.ylim((0.7, 0.95))
         if not os.path.isdir('figures'):
             os.mkdir('figures')
         plt.savefig(f'figures/{len(boroughs)} boroughs model.png')

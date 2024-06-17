@@ -61,14 +61,17 @@ def get_df_income(file_path):
 
 df_income = get_df_income('../data/economic/earnings-residence-borough.xlsx')
 
+selected_boroughs = [i.replace('city of ', '') for i in selected_boroughs]  # Change 'City of Westminster' to 'Westminster'
 df_income = df_income[df_income['Area'].str.lower().isin(selected_boroughs)]
 
 df_income = df_income.set_index(df_income.columns[0]).transpose()
 
+df_income = df_income.rename(columns={'Westminster': 'City of Westminster'})
 df_income = df_income.rename(columns={'Area': 'Year'})
-
 df_income.index.names = ['Year']
-
+min_value = df_income.values.min()
+max_value = df_income.values.max()
+print(df_income)
 
 def min_max_scale(df):
     # Initialize the MinMaxScaler
@@ -84,26 +87,24 @@ def min_max_scale(df):
 
 df_income = min_max_scale(df_income)
 
-
-fig_best = sns.lineplot(df_income, dashes=False)
-# years = [2016, 2017, 2018, 2019, 2020, 2021, 2022]
-
-# # Create a DataFrame with these years as the index
-# df_trust = pd.DataFrame(index=years)
-#
-# # Assign the trust values to each year
-# for area, trust in boroughs_trust.items():
-#     df_trust[area] = trust
-#
-# df_trust.index.names = ['Year']
-# print(df_trust)
+fig, ax = plt.subplots(figsize=(15, 6))
+sns.lineplot(data=df_income, dashes=False, ax=ax)
 
 df_PAS = df_PAS.rename(columns={'year': 'Year'})
 df_PAS.set_index('Year', inplace=True)
-pas_plot = sns.lineplot(df_PAS, ax=fig_best)
-
+df_PAS.columns = [f'Trust {i}' for i in df_PAS.columns]
+print(df_PAS)
+sns.lineplot(data=df_PAS, ax=ax)
 
 title_mapper = {True: 'most', False: 'least'}
-fig_best.set_title(f'House prices for the {title_mapper[BEST]} 5 trusted boroughs')
-# fig_best.get_legend().remove()
+ax.set_title(f'Hourly income for the {title_mapper[BEST]} 5 trusted boroughs', fontsize=24)
+fig.patch.set_alpha(0.0)  # Set the plot background transparant
+ax.set_xlim(2016, 2022)
+
+fig.suptitle(f'Hourly income range: [£{min_value}, £{max_value}]')
+# Move the legend to the right side of the plot
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='large')
+
+plt.subplots_adjust(right=0.7)
 plt.show()
+fig.savefig(f'figures/{title_mapper[BEST]}_boroughs_trust_and_income.png')

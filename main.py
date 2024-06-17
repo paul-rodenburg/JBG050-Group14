@@ -6,11 +6,14 @@ def get_database():
     if x == "1":
         print("Downloading the database...")
         # Importing lets the python scripts run
-        from download_database import download_databases
+        from download_database import download_database
     elif x == "2":
         print("Generating the database...")
-        # Importing lets the python scripts run
-        from generate_database import download_data, unpack_data, make_path_json, generate_database, PAS_to_sql
+        # Importing lets the python scripts run.
+        # You will get warnings that some are scrapped but will still generate them such that python files needing that data work
+        from generate_database import download_data, unpack_data, make_path_json, generate_database, PAS_to_sql, make_trust_table, get_street_names, generate_closure_time
+        from scrapped_bbc_articles import webscraping
+        from generate_database import analyze_bbc_articles
     else:
         print("Invalid input")
         get_database()

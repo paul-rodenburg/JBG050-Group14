@@ -2,8 +2,17 @@ import sqlite3
 import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from functions import make_table_SQL
+import warnings
 
 analyzer = SentimentIntensityAnalyzer()
+
+# -------------------- SCRAPPED -------------------
+warnings.warn('BBC ARTICLES IS NOT SOMETHING USED IN THE FINAL PRESENTATION. '
+              'THIS WAS EXPLORED AND SCRAPPED BECAUSE THERE WERE NO SIGNIFICANT DIFFERENCES BETWEEN BOROUGHS '
+              'TO DRAW ANY CONCLUSION', category=DeprecationWarning)
+# -------------------- SCRAPPED -------------------
+
+
 
 
 # Function to compute VADER sentiment scores

@@ -1,5 +1,12 @@
 import pandas as pd
 import sqlite3
+import warnings
+
+# -------------------- SCRAPPED -------------------
+warnings.warn('ANALYZING CLOSURE TIME IS NOT SOMETHING INCLUDED IN THE FINAL PRESENTATION BECAUSE '
+              'CLOSURE TIME CAN ONLY BE COMPUTED IN MONTHS WHICH IS NOT SPECIFIC ENOUGH', category=DeprecationWarning)
+# -------------------- SCRAPPED -------------------
+
 
 
 

@@ -1,0 +1,32 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                      y   R-squared:                       1.000
+Model:                            OLS   Adj. R-squared:                    nan
+Method:                 Least Squares   F-statistic:                       nan
+Date:                Wed, 12 Jun 2024   Prob (F-statistic):                nan
+Time:                        13:26:15   Log-Likelihood:                 135.21
+No. Observations:                   5   AIC:                            -260.4
+Df Residuals:                       0   BIC:                            -262.4
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+============================================================================================
+                               coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------
+const                        0.0097        inf          0        nan         nan         nan
+unemployment                 0.0050        inf          0        nan         nan         nan
+earnings                    -0.0266        inf         -0        nan         nan         nan
+prices                       0.1133        inf          0        nan         nan         nan
+sales_volumes               -0.0003        inf         -0        nan         nan         nan
+prices_first_time_buyers -8.746e-07        inf         -0        nan         nan         nan
+==============================================================================
+Omnibus:                          nan   Durbin-Watson:                   1.254
+Prob(Omnibus):                    nan   Jarque-Bera (JB):                0.899
+Skew:                           1.024   Prob(JB):                        0.638
+Kurtosis:                       2.645   Cond. No.                     3.10e+06
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The input rank is higher than the number of observations.
+[3] The condition number is large, 3.1e+06. This might indicate that there are
+strong multicollinearity or other numerical problems.

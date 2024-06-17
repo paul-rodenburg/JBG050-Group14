@@ -5,6 +5,16 @@ from functions import make_table_SQL
 from functions import download
 import pandas as pd
 import shutil
+import warnings
+
+# -------------------- SCRAPPED -------------------
+warnings.warn('GETTING STREETNAMES WAS USED FOR ANALYZING BBC ARTICLES. '
+              'SINCE THAT IS SCRAPPED THIS IS NOT USED FOR THE FINAL PRESENTATION', category=DeprecationWarning)
+# -------------------- SCRAPPED -------------------
+
+
+
+
 
 download_url = {"street_names.zip": "https://api.os.uk/downloads/v1/products/OpenNames/downloads?area=GB&format=CSV&redirect"}
 
