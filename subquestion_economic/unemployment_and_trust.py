@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from generate_database.functions import get_trust
 
-BEST = False
+BEST = True
 
 df_unemp = pd.read_csv('../data/economic/unemploymentRates.csv', delimiter=';')
 df_unemp.columns = ['Year'] + [col[-4:] for col in df_unemp.columns[1:]]
@@ -39,6 +39,7 @@ print(f"Max unemp: {max_value}")
 plot_unemp = sns.lineplot(df_unemp)
 mapper = {True: "most", False: "least"}
 plot_unemp.set_title(f"Unemployment rate [{min_value}, {max_value}] for the 5 {mapper[BEST]} trusted boroughs")
+plt.savefig(f'figures/{mapper[BEST]}_unemployment_and_trust.png')
 plt.show()
 trust_plot = sns.lineplot(df_trust)
 trust_plot.set_title(f"Trust for the 5 {mapper[BEST]} trusted boroughs")
